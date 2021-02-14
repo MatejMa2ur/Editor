@@ -3,19 +3,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:jas="clr-namespace:WPF.JoshSmith.Controls" 
         xmlns:local="clr-namespace:Editor"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Menu Margin="680,0,0,0">
             <Button Content="Elipsa" Width="79" x:Name="Elipsa"/>
-            <Button Content="Kruh" Width="79" x:Name="Kruh" IsEnabled="False"/>
-            <Button Content="Štvorec" Width="79" x:Name="Štvorec" IsEnabled="False"/>
-            <Button Content="Uložiť" Width="79" x:Name="Uložiť" Click="Uložiť_Click"/>
-            <Button Content="Načítať" Width="79" x:Name="Načítať" Click="Načítať_Click"/>
+            <Button Content="Kruh" Width="79" x:Name="Kruh"/>
+            <Button Content="Štvorec" Width="79" x:Name="Stvorec"/>
+            <Button Content="Obdĺžnik" Width="79" x:Name="Obdlznik"/>
+            
+
             <TextBox x:Name="DataObjektu" Text="Info TextBox" TextWrapping="Wrap" Width="101" Height="126"/>
+            <Button Content="Uložiť" Width="79" x:Name="Uložiť" Click="Uložiť_Click"/>
+            <Button Content="Načítať" Width="79" x:Name="Načítať"/>
+            <Button Content="Reset" Width="79" x:Name="Reset" Click="Reset_Click"/>
         </Menu>
         <Canvas x:Name="Canvascek" Margin="0,0,120,0">
+
         </Canvas>
 
     </Grid>
