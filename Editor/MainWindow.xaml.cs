@@ -22,6 +22,10 @@ namespace Editor
     /// </summary>
     public partial class MainWindow : Window
     {
+
+
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -39,26 +43,126 @@ namespace Editor
                 sender.GetType().GetProperty("StrokeThickness").SetValue(sender, 2);
 
                 DataObjektu.Text = sender.GetType().ToString().Replace("System.Windows.Shapes.", "") + "\nWidth: " + sender.GetType().GetProperty("Width").GetValue(sender) + "\n" + "Height: " + sender.GetType().GetProperty("Height").GetValue(sender);
-
+                /*
                 var element = (UIElement)sender;
                 dragStart = args.GetPosition(element);
                 element.CaptureMouse();
+                */
+
+                if (MouseHitType == HitType.None) return;
+                LastPoint = Mouse.GetPosition(Canvascek);
+                DragInProgress = true;
             };
             MouseButtonEventHandler mouseUp = (sender, args) => {
+                /*
                 var element = (UIElement)sender;
                 dragStart = null;
                 element.ReleaseMouseCapture();
+                */
+                DragInProgress = false;
+
             };
             MouseEventHandler mouseMove = (sender, args) => {
+                /*
+                MouseHitType = SetHitType((UIElement)sender, Mouse.GetPosition(Canvascek));
+                SetMouseCursor();
                 if (dragStart != null && args.LeftButton == MouseButtonState.Pressed)
                 {
                     var element = (UIElement)sender;
                     var p2 = args.GetPosition(Canvascek);
-                    Canvas.SetLeft(element, p2.X <= 0 ? 0 : p2.X - dragStart.Value.X);
-                    Canvas.SetTop(element, p2.Y <= 0 ? 0 : p2.Y - dragStart.Value.Y);
+                    Canvas.SetLeft(element, p2.X <= 0 ? 0 : Canvas.GetLeft(element) < 0 ? 0 : p2.X - dragStart.Value.X);
+                    Canvas.SetTop(element, p2.Y <= 0 ? 0 : Canvas.GetTop(element) < 0 ? 0 : p2.Y - dragStart.Value.Y);
+                }*/
+                var fe = sender as FrameworkElement;
+                if (DragInProgress)
+                {
+                    // See how much the mouse has moved.
+                    Point point = Mouse.GetPosition(Canvascek);
+                    double offset_x = point.X - LastPoint.X;
+                    double offset_y = point.Y - LastPoint.Y;
+
+                    // Get the rectangle's current position.
+                    double new_x = Canvas.GetLeft(fe);
+                    double new_y = Canvas.GetTop(fe);
+                    double new_width = fe.Width;
+                    double new_height = fe.Height;
+
+                    // Update the rectangle.
+                    switch (MouseHitType)
+                    {
+                        case HitType.Body:
+                            new_x += offset_x;
+                            new_y += offset_y;
+                            break;
+                        case HitType.UL:
+                            new_x += offset_x;
+                            new_y += offset_y;
+                            new_width -= offset_x;
+                            new_height -= offset_y;
+                            break;
+                        case HitType.UR:
+                            new_y += offset_y;
+                            new_width += offset_x;
+                            new_height -= offset_y;
+                            break;
+                        case HitType.LR:
+                            new_width += offset_x;
+                            new_height += offset_y;
+                            break;
+                        case HitType.LL:
+                            new_x += offset_x;
+                            new_width -= offset_x;
+                            new_height += offset_y;
+                            break;
+                        case HitType.L:
+                            new_x += offset_x;
+                            new_width -= offset_x;
+                            break;
+                        case HitType.R:
+                            new_width += offset_x;
+                            break;
+                        case HitType.B:
+                            new_height += offset_y;
+                            break;
+                        case HitType.T:
+                            new_y += offset_y;
+                            new_height -= offset_y;
+                            break;
+                    }
+
+                    // Don't use negative width or height.
+                    if ((new_width > 0) && (new_height > 0))
+                    {
+                        // Update the rectangle.
+                        Canvas.SetLeft(fe, new_x);
+                        Canvas.SetTop(fe, new_y);
+                        fe.Width = new_width;
+                        fe.Height = new_height;
+
+                        // Save the mouse's new location.
+                        LastPoint = point;
+                    }
+                }
+                else
+                {
+                    MouseHitType = SetHitType(fe,
+                        Mouse.GetPosition(Canvascek));
+                    SetMouseCursor();
                 }
             };
-            Action<UIElement> enableDrag = (element) => { element.MouseDown += mouseDown; element.MouseMove += mouseMove; element.MouseUp += mouseUp;};
+            MouseEventHandler mouseLeave = (sender, args) => {
+                /*
+                MouseHitType = HitType.None;
+                SetMouseCursor();
+                */
+            };
+
+            Action<UIElement> enableDrag = (element) => { 
+                element.MouseDown += mouseDown; 
+                element.MouseMove += mouseMove; 
+                element.MouseUp += mouseUp; 
+                element.MouseLeave += mouseLeave;
+            };
 
 
             var rand = new Random();
@@ -92,7 +196,7 @@ namespace Editor
             Kruh.Click += (sender, e) => 
             {
                 var myKruh = (Ellipse)Create_Element(new Ellipse());
-
+                myKruh.Width = myKruh.Height;
                 enableDrag(myKruh);
 
                 Canvascek.Children.Add(myKruh);
@@ -117,7 +221,7 @@ namespace Editor
             Stvorec.Click += (sender, e) =>
             {
                 var mySquare = (Rectangle)Create_Element(new Rectangle());
-
+                mySquare.Width = mySquare.Height;
                 enableDrag(mySquare);
 
                 Canvascek.Children.Add(mySquare);
@@ -267,6 +371,88 @@ namespace Editor
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             Canvascek.Children.Clear();
+        }
+
+
+
+        private enum HitType
+        {
+            None, Body, UL, UR, LR, LL, L, R, T, B
+        };
+
+        // The part of the rectangle under the mouse.
+        HitType MouseHitType = HitType.None;
+
+        // True if a drag is in progress.
+        private bool DragInProgress = false;
+
+        // The drag's last point.
+        private Point LastPoint;
+        private HitType SetHitType(UIElement element, Point point)
+        {
+            var fe = element as FrameworkElement;
+            double left = Canvas.GetLeft(element);
+            double top = Canvas.GetTop(element);
+            double right = left + fe.Width;
+            double bottom = top + fe.Height;
+            if (point.X < left) return HitType.None;
+            if (point.X > right) return HitType.None;
+            if (point.Y < top) return HitType.None;
+            if (point.Y > bottom) return HitType.None;
+
+            const double GAP = 10;
+            if (point.X - left < GAP)
+            {
+                // Left edge.
+                if (point.Y - top < GAP) return HitType.UL;
+                if (bottom - point.Y < GAP) return HitType.LL;
+                return HitType.L;
+            }
+            else if (right - point.X < GAP)
+            {
+                // Right edge.
+                if (point.Y - top < GAP) return HitType.UR;
+                if (bottom - point.Y < GAP) return HitType.LR;
+                return HitType.R;
+            }
+            if (point.Y - top < GAP) return HitType.T;
+            if (bottom - point.Y < GAP) return HitType.B;
+            return HitType.Body;
+        }
+
+        // Set a mouse cursor appropriate for the current hit type.
+        private void SetMouseCursor()
+        {
+            // See what cursor we should display.
+            Cursor desired_cursor = Cursors.Arrow;
+            switch (MouseHitType)
+            {
+                case HitType.None:
+                    desired_cursor = Cursors.Arrow;
+                    break;
+                case HitType.Body:
+                    desired_cursor = Cursors.ScrollAll;
+                    break;
+                case HitType.UL:
+                case HitType.LR:
+                    desired_cursor = Cursors.SizeNWSE;
+                    break;
+                case HitType.LL:
+                case HitType.UR:
+                    desired_cursor = Cursors.SizeNESW;
+                    break;
+                case HitType.T:
+                case HitType.B:
+                    desired_cursor = Cursors.SizeNS;
+                    break;
+                case HitType.L:
+                case HitType.R:
+                    desired_cursor = Cursors.SizeWE;
+                    break;
+            }
+
+            // Display the desired cursor.
+            if (Cursor != desired_cursor) Cursor = desired_cursor;
         }
 
 
