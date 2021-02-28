@@ -54,8 +54,8 @@ namespace Editor
                 {
                     var element = (UIElement)sender;
                     var p2 = args.GetPosition(Canvascek);
-                    Canvas.SetLeft(element, p2.X - dragStart.Value.X);
-                    Canvas.SetTop(element, p2.Y - dragStart.Value.Y);
+                    Canvas.SetLeft(element, p2.X <= 0 ? 0 : p2.X - dragStart.Value.X);
+                    Canvas.SetTop(element, p2.Y <= 0 ? 0 : p2.Y - dragStart.Value.Y);
                 }
             };
             Action<UIElement> enableDrag = (element) => { element.MouseDown += mouseDown; element.MouseMove += mouseMove; element.MouseUp += mouseUp;};
@@ -65,16 +65,7 @@ namespace Editor
 
             Elipsa.Click += (sender, e) => 
             {
-                var myElipse = new Ellipse();
-                myElipse.Width = rand.Next(50, 101);
-                myElipse.Height = rand.Next(50, 101);
-                if (myElipse.Width == myElipse.Height)
-                    myElipse.Width -= 10;
-                SolidColorBrush myColor = new SolidColorBrush();
-                myColor.Color = Color.FromRgb(Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)));
-                myElipse.Fill = myColor;
-                myElipse.StrokeThickness = 0;
-                myElipse.Stroke = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                var myElipse = (Ellipse)Create_Element(new Ellipse());
 
                 enableDrag(myElipse);
 
@@ -100,15 +91,7 @@ namespace Editor
 
             Kruh.Click += (sender, e) => 
             {
-                var myKruh = new Ellipse();
-                myKruh.Width = rand.Next(50, 101);
-                myKruh.Height = myKruh.Width;
-
-                SolidColorBrush myColor = new SolidColorBrush();
-                myColor.Color = Color.FromRgb(Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)));
-                myKruh.Fill = myColor;
-                myKruh.StrokeThickness = 0;
-                myKruh.Stroke = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                var myKruh = (Ellipse)Create_Element(new Ellipse());
 
                 enableDrag(myKruh);
 
@@ -133,15 +116,7 @@ namespace Editor
 
             Stvorec.Click += (sender, e) =>
             {
-                var mySquare = new Rectangle();
-                mySquare.Width = rand.Next(50, 101);
-                mySquare.Height = mySquare.Width;
-
-                SolidColorBrush myColor = new SolidColorBrush();
-                myColor.Color = Color.FromRgb(Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)));
-                mySquare.Fill = myColor;
-                mySquare.StrokeThickness = 0;
-                mySquare.Stroke = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                var mySquare = (Rectangle)Create_Element(new Rectangle());
 
                 enableDrag(mySquare);
 
@@ -166,17 +141,7 @@ namespace Editor
 
             Obdlznik.Click += (sender, e) =>
             {
-                var myRectangle = new Rectangle();
-                myRectangle.Width = rand.Next(50, 101);
-                myRectangle.Height = rand.Next(50, 101);
-                if (myRectangle.Width == myRectangle.Height)
-                    myRectangle.Width -= 10;
-
-                SolidColorBrush myColor = new SolidColorBrush();
-                myColor.Color = Color.FromRgb(Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)));
-                myRectangle.Fill = myColor;
-                myRectangle.StrokeThickness = 0;
-                myRectangle.Stroke = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                var myRectangle = (Rectangle)Create_Element(new Rectangle());
 
                 enableDrag(myRectangle);
 
@@ -246,24 +211,26 @@ namespace Editor
         }
 
 
-        /* //Zlepšenie - skrátenie kódu
         private UIElement Create_Element(UIElement uIElement)
         {
             var rand = new Random();
-            uIElement.GetType().GetProperty("Width").SetValue(uIElement, that);
-            uIElement.Width = rand.Next(50, 101);
-            myElipse.Height = rand.Next(50, 101);
-            if (myElipse.Width == myElipse.Height)
-                myElipse.Width -= 10;
+            var Width = rand.Next(50, 101);
+            var Height = rand.Next(50, 101);
+            if (Width == Height)
+                Width -= 10;
+            uIElement.GetType().GetProperty("Width").SetValue(uIElement, Width);
+            uIElement.GetType().GetProperty("Height").SetValue(uIElement, Height);
+
             SolidColorBrush myColor = new SolidColorBrush();
             myColor.Color = Color.FromRgb(Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)), Convert.ToByte(rand.Next(256)));
-            myElipse.Fill = myColor;
-            myElipse.StrokeThickness = 0;
-            myElipse.Stroke = new SolidColorBrush(Color.FromRgb(255, 255, 255));
 
-            myElipse.MouseDown += Element_MouseLeftButtonDown;
+            uIElement.GetType().GetProperty("Fill").SetValue(uIElement, myColor);
+            uIElement.GetType().GetProperty("StrokeThickness").SetValue(uIElement, 0);
+            uIElement.GetType().GetProperty("Stroke").SetValue(uIElement, new SolidColorBrush(Color.FromRgb(255, 255, 255)));
+
+            uIElement.MouseDown += Element_MouseLeftButtonDown;
             return uIElement;
-        }*/
+        }
 
 
         private void Uložiť_Click(object sender, RoutedEventArgs e)
@@ -301,6 +268,7 @@ namespace Editor
         {
             Canvascek.Children.Clear();
         }
+
 
     }
 }
